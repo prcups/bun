@@ -1,0 +1,20 @@
+--- deflate.c.orig	2026-03-23 20:11:21.415915481 +0800
++++ deflate.c	2026-03-23 20:11:37.338338770 +0800
+@@ -144,6 +144,17 @@
+     return _mm_crc32_u32(0, *(uint32_t*)str) & s->hash_mask;
+ }
+ 
++
++#elif defined(__loongarch64)
++
++/* LoongArch64: use software hash fallback */
++static uint32_t hash_func(deflate_state *s, void* str) {
++    uint32_t w;
++    zmemcpy(&w, str, sizeof(w));
++    w *= 0x85ebca77u;
++    w ^= w >> 19;
++    return w & s->hash_mask;
++}
+ #else
+ 
+ #error "Only 64-bit Intel and ARM architectures are supported"

@@ -350,6 +350,9 @@ pub const analytics = struct {
         /// arm
         arm,
 
+        /// loong64
+        loong64,
+
         _,
 
         pub fn jsonStringify(self: @This(), writer: anytype) !void {

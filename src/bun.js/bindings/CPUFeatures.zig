@@ -28,7 +28,21 @@ pub const Flags = switch (@import("builtin").cpu.arch) {
 
         padding: u1 = 0,
     },
-    else => unreachable,
+    .loongarch64 => packed struct(u8) {
+        none: bool,
+
+        fpu: bool,
+        lsx: bool,
+        lasx: bool,
+        lbt: bool,
+        lvz: bool,
+
+        padding: u3 = 0,
+    },
+    else => packed struct(u8) {
+        none: bool,
+        padding: u7 = 0,
+    },
 };
 
 pub fn format(features: @This(), writer: *std.Io.Writer) !void {

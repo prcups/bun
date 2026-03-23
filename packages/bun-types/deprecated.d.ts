@@ -14,7 +14,18 @@ declare module "bun" {
     | "netbsd";
 
   /** @deprecated This type is unused in Bun's types and might be removed in the near future */
-  type Architecture = "arm" | "arm64" | "ia32" | "mips" | "mipsel" | "ppc" | "ppc64" | "s390" | "s390x" | "x64";
+  type Architecture =
+    | "arm"
+    | "arm64"
+    | "ia32"
+    | "mips"
+    | "mipsel"
+    | "ppc"
+    | "ppc64"
+    | "s390"
+    | "s390x"
+    | "x64"
+    | "loong64";
 
   /** @deprecated This type is unused in Bun's types and might be removed in the near future */
   type UncaughtExceptionListener = (error: Error, origin: UncaughtExceptionOrigin) => void;

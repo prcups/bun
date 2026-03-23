@@ -236,7 +236,7 @@ pub const EventName = enum(u8) {
 
 var random: std.rand.DefaultPrng = undefined;
 
-const platform_arch = if (Environment.isAarch64) analytics.Architecture.arm else analytics.Architecture.x64;
+const platform_arch = if (Environment.isAarch64) analytics.Architecture.arm else if (Environment.isLoongArch64) analytics.Architecture.loong64 else analytics.Architecture.x64;
 
 // TODO: move this code somewhere more appropriate, and remove it from "analytics"
 // The following code is not currently even used for analytics, just feature-detection

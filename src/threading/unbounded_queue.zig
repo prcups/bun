@@ -1,6 +1,7 @@
 pub const cache_line_length = switch (@import("builtin").target.cpu.arch) {
     .x86_64, .aarch64, .powerpc64 => 128,
     .arm, .mips, .mips64, .riscv64 => 32,
+    .loongarch64 => 64,
     .s390x => 256,
     else => 64,
 };

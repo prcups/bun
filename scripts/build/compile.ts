@@ -33,6 +33,16 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   const ar = q(cfg.ar);
   const ccacheLauncher = cfg.ccache !== undefined ? `${q(cfg.ccache)} ` : "";
 
+  // Cross-compilation flags
+  const crossFlags: string[] = [];
+  if (cfg.crossCompile && cfg.targetTriple) {
+    crossFlags.push(`--target=${cfg.targetTriple}`);
+  }
+  if (cfg.sysroot) {
+    crossFlags.push(`--sysroot=${cfg.sysroot}`);
+  }
+  const crossFlagsStr = crossFlags.length > 0 ? crossFlags.join(" ") + " " : "";
+
   // Depfile handling differs between clang (gcc-style .d) and clang-cl (/showIncludes)
   const depfileOpts: Pick<Rule, "depfile" | "deps"> = cfg.windows
     ? { deps: "msvc" }
@@ -42,8 +52,8 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   // Note: $cxxflags is set per-build (allows per-file overrides).
   n.rule("cxx", {
     command: cfg.windows
-      ? `${ccacheLauncher}${cxx} /nologo /showIncludes $cxxflags /c $in /Fo$out`
-      : `${ccacheLauncher}${cxx} $cxxflags -MMD -MT $out -MF $out.d -c $in -o $out`,
+      ? `${ccacheLauncher}${cxx} /nologo /showIncludes ${crossFlagsStr}$cxxflags /c $in /Fo$out`
+      : `${ccacheLauncher}${cxx} ${crossFlagsStr}$cxxflags -MMD -MT $out -MF $out.d -c $in -o $out`,
     description: "cxx $out",
     ...depfileOpts,
   });
@@ -61,8 +71,8 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   // on the clang driver, but -Xclang bypasses the driver's sanity check.
   n.rule("cxx_pch", {
     command: cfg.windows
-      ? `${ccacheLauncher}${cxx} /nologo /showIncludes $cxxflags /Yu$pch_header /Fp$pch_file /c $in /Fo$out`
-      : `${ccacheLauncher}${cxx} $cxxflags -Winvalid-pch -Xclang -include-pch -Xclang $pch_file -Xclang -include -Xclang $pch_header -MMD -MT $out -MF $out.d -c $in -o $out`,
+      ? `${ccacheLauncher}${cxx} /nologo /showIncludes ${crossFlagsStr}$cxxflags /Yu$pch_header /Fp$pch_file /c $in /Fo$out`
+      : `${ccacheLauncher}${cxx} ${crossFlagsStr}$cxxflags -Winvalid-pch -Xclang -include-pch -Xclang $pch_file -Xclang -include -Xclang $pch_header -MMD -MT $out -MF $out.d -c $in -o $out`,
     description: "cxx $out",
     ...depfileOpts,
   });
@@ -70,8 +80,8 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   // ─── C compile ───
   n.rule("cc", {
     command: cfg.windows
-      ? `${ccacheLauncher}${cc} /nologo /showIncludes $cflags /c $in /Fo$out`
-      : `${ccacheLauncher}${cc} $cflags -MMD -MT $out -MF $out.d -c $in -o $out`,
+      ? `${ccacheLauncher}${cc} /nologo /showIncludes ${crossFlagsStr}$cflags /c $in /Fo$out`
+      : `${ccacheLauncher}${cc} ${crossFlagsStr}$cflags -MMD -MT $out -MF $out.d -c $in -o $out`,
     description: "cc $out",
     ...depfileOpts,
   });
@@ -93,8 +103,8 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   // tracks all headers so PCH invalidates when WebKit headers change.
   n.rule("pch", {
     command: cfg.windows
-      ? `${ccacheLauncher}${cxx} /nologo /showIncludes $cxxflags /Yc$pch_header /Fp$out /c $pch_stub /Fo$pch_stub_obj`
-      : `${ccacheLauncher}${cxx} $cxxflags -Winvalid-pch -fpch-instantiate-templates -Xclang -emit-pch -Xclang -include -Xclang $pch_header -x c++-header -MD -MT $out -MF $out.d -c $in -o $out`,
+      ? `${ccacheLauncher}${cxx} /nologo /showIncludes ${crossFlagsStr}$cxxflags /Yc$pch_header /Fp$out /c $pch_stub /Fo$pch_stub_obj`
+      : `${ccacheLauncher}${cxx} ${crossFlagsStr}$cxxflags -Winvalid-pch -fpch-instantiate-templates -Xclang -emit-pch -Xclang -include -Xclang $pch_header -x c++-header -MD -MT $out -MF $out.d -c $in -o $out`,
     description: "pch $out",
     ...depfileOpts,
   });
@@ -114,8 +124,8 @@ export function registerCompileRules(n: Ninja, cfg: Config): void {
   const wrap = `${q(cfg.bun)} ${q(streamPath)} link --console`;
   n.rule("link", {
     command: cfg.windows
-      ? `${wrap} ${cxx} /nologo -fuse-ld=lld @$out.rsp /Fe$out /link $ldflags`
-      : `${wrap} ${cxx} @$out.rsp $ldflags -o $out`,
+      ? `${wrap} ${cxx} /nologo -fuse-ld=lld @$out.rsp /Fe$out /link ${crossFlagsStr}$ldflags`
+      : `${wrap} ${cxx} ${crossFlagsStr}@$out.rsp $ldflags -o $out`,
     description: "link $out",
     rspfile: "$out.rsp",
     rspfile_content: "$in_newline",

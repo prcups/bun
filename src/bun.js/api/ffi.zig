@@ -301,6 +301,18 @@ pub const FFI = struct {
                     } else if (bun.FD.cwd().directoryExistsAt("/usr/lib64").isTrue()) {
                         cached_default_system_library_dir = "/usr/lib64";
                     }
+                } else if (Environment.isLoongArch64) {
+                    if (bun.FD.cwd().directoryExistsAt("/usr/include/loongarch64-linux-gnu").isTrue()) {
+                        cached_default_system_include_dir = "/usr/include/loongarch64-linux-gnu";
+                    } else if (bun.FD.cwd().directoryExistsAt("/usr/include").isTrue()) {
+                        cached_default_system_include_dir = "/usr/include";
+                    }
+
+                    if (bun.FD.cwd().directoryExistsAt("/usr/lib/loongarch64-linux-gnu").isTrue()) {
+                        cached_default_system_library_dir = "/usr/lib/loongarch64-linux-gnu";
+                    } else if (bun.FD.cwd().directoryExistsAt("/usr/lib64").isTrue()) {
+                        cached_default_system_library_dir = "/usr/lib64";
+                    }
                 }
             }
         }

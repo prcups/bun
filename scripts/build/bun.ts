@@ -531,7 +531,7 @@ function emitSmokeTest(n: Ninja, cfg: Config, exe: string, exeName: string): voi
   const envWrap = "env BUN_DEBUG_QUIET_LOGS=1";
   let testCmd: string;
   if (cfg.linux && cfg.asan) {
-    const arch = cfg.x64 ? "x86_64" : "aarch64";
+    const arch = cfg.loong64 ? "loongarch64" : cfg.x64 ? "x86_64" : "aarch64";
     testCmd = `${envWrap} setarch ${arch} -R ${exe} --revision || ${envWrap} ${exe} --revision`;
   } else if (cfg.windows) {
     // Windows: no setarch, no env wrapper syntax differences matter for

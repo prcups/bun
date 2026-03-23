@@ -986,7 +986,7 @@ pub fn parse(allocator: std.mem.Allocator, comptime subcommand: Subcommand) !Com
                 !strings.eqlComptime(cpu_str, "none"))
             {
                 // Only error for truly unrecognized values (not "any" or "none")
-                Output.errGeneric("Invalid CPU architecture: '{s}'. Valid values are: *, any, arm, arm64, ia32, mips, mipsel, ppc, ppc64, s390, s390x, x32, x64. Use !name to negate.", .{cpu_str});
+                Output.errGeneric("Invalid CPU architecture: '{s}'. Valid values are: *, any, arm, arm64, ia32, mips, mipsel, ppc, ppc64, s390, s390x, x32, x64, loong64. Use !name to negate.", .{cpu_str});
                 Global.crash();
             }
         }

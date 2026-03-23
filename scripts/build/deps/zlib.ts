@@ -26,6 +26,7 @@ export const zlib: Dependency = {
     "patches/zlib/deflate.h.patch",
     "patches/zlib/ucm.cmake.patch",
     "scripts/build/patches/zlib/remove-machine-x64.patch",
+    "patches/zlib/loongarch64-support.patch",
   ],
 
   build: cfg => {
@@ -44,6 +45,15 @@ export const zlib: Dependency = {
     if (cfg.darwin) {
       spec.extraCFlags = ["-fno-define-target-os-macros"];
       spec.extraCxxFlags = ["-fno-define-target-os-macros"];
+    }
+
+    // LoongArch64: CMake may detect SSE support (clang supports -msse4.2 flag)
+    // but SSE intrinsics are not available for this target.
+    // Undefine SSE macros to use the software fallback in deflate.c.
+    if (cfg.loong64) {
+      spec.args.SKIP_CPUID_CHECK = "ON";
+      spec.extraCFlags = spec.extraCFlags ?? [];
+      spec.extraCFlags.push("-UHAS_SSE2", "-UHAS_SSSE3", "-UHAS_SSE42", "-UHAS_PCLMUL");
     }
 
     return spec;

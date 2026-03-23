@@ -185,8 +185,10 @@ export function clangTargetArch(clang: string): Arch | undefined {
   if (!m) return undefined;
   const triple = m[1]!;
   // aarch64-pc-windows-msvc, arm64-apple-darwin, x86_64-unknown-linux-gnu, ...
+  // loongarch64-unknown-linux-gnu, loong64-unknown-linux-gnu, ...
   if (/^(aarch64|arm64)/.test(triple)) return "aarch64";
   if (/^(x86_64|x64|amd64)/i.test(triple)) return "x64";
+  if (/^loong(arch)?64/i.test(triple)) return "loongarch64";
   return undefined;
 }
 

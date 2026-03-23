@@ -38,11 +38,11 @@ export const ZIG_COMMIT = "c031cbebf5b063210473ff5204a24ebfb2492c72";
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Zig target triple. Arch is always `x86_64`/`aarch64` (zig's naming),
- * not `x64`/`arm64`.
+ * Zig target triple. Arch is always `x86_64`/`aarch64`/`loongarch64` (zig's naming),
+ * not `x64`/`arm64`/`loong64`.
  */
 export function zigTarget(cfg: Config): string {
-  const arch = cfg.x64 ? "x86_64" : "aarch64";
+  const arch = cfg.loong64 ? "loongarch64" : cfg.x64 ? "x86_64" : "aarch64";
   if (cfg.darwin) return `${arch}-macos-none`;
   if (cfg.windows) return `${arch}-windows-msvc`;
   // linux: abi is always set (resolveConfig asserts)
@@ -86,8 +86,12 @@ export function zigOptimize(cfg: Config): "Debug" | "ReleaseFast" | "ReleaseSafe
  * arm64: apple_m1 (darwin), cortex_a76 (windows — no ARMv9 windows yet),
  *   native (linux — no baseline arm64 builds needed).
  * x64: nehalem (baseline, pre-AVX), haswell (AVX2).
+ * loong64: native (generic loongarch64 support).
  */
 export function zigCpu(cfg: Config): string {
+  if (cfg.loong64) {
+    return "native";
+  }
   if (cfg.arm64) {
     if (cfg.darwin) return "apple_m1";
     if (cfg.windows) return "cortex_a76";

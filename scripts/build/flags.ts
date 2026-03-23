@@ -69,6 +69,11 @@ export const globalFlags: Flag[] = [
     when: c => c.x64 && !c.baseline,
     desc: "x64 default: Haswell (2013) — AVX2, BMI2 available",
   },
+  {
+    flag: "-march=loongarch64",
+    when: c => c.loong64,
+    desc: "LoongArch64: generic loongarch64 target",
+  },
 
   // ─── MSVC runtime (Windows) ───
   {

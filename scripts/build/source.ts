@@ -925,6 +925,20 @@ function emitNestedCmake(
     args.push(`-DCMAKE_OSX_SYSROOT=${cfg.osxSysroot}`);
   }
 
+  // Cross-compilation support
+  if (cfg.crossCompile) {
+    if (cfg.linux) {
+      args.push(`-DCMAKE_SYSTEM_NAME=Linux`);
+    }
+    if (cfg.loong64) {
+      args.push(`-DCMAKE_SYSTEM_PROCESSOR=loongarch64`);
+    } else if (cfg.arm64) {
+      args.push(`-DCMAKE_SYSTEM_PROCESSOR=aarch64`);
+    } else if (cfg.x64) {
+      args.push(`-DCMAKE_SYSTEM_PROCESSOR=x86_64`);
+    }
+  }
+
   // Generator + build type. BUILD_SHARED_LIBS=OFF by default — every dep
   // wants static, and many (boringssl, zlib, highway...) rely on this
   // being set globally rather than having their own MY_LIB_SHARED=OFF flag.
@@ -950,6 +964,16 @@ function emitNestedCmake(
   const depFlags = computeDepFlags(cfg);
   let cflags = depFlags.cflags.join(" ");
   let cxxflags = depFlags.cxxflags.join(" ");
+
+  // Cross-compilation flags for deps
+  if (cfg.crossCompile && cfg.targetTriple) {
+    cflags += ` --target=${cfg.targetTriple}`;
+    cxxflags += ` --target=${cfg.targetTriple}`;
+  }
+  if (cfg.sysroot) {
+    cflags += ` --sysroot=${cfg.sysroot}`;
+    cxxflags += ` --sysroot=${cfg.sysroot}`;
+  }
 
   // PIC handling:
   //   spec.pic=true  → add -fPIC (non-windows), also tell cmake

@@ -53,6 +53,8 @@ else if (Environment.isX86)
     "x86"
 else if (Environment.isAarch64)
     "arm64"
+else if (Environment.isLoongArch64)
+    "loong64"
 else
     "unknown";
 

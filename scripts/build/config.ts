@@ -16,7 +16,7 @@ import { clangTargetArch } from "./tools.ts";
 import { ZIG_COMMIT } from "./zig.ts";
 
 export type OS = "linux" | "darwin" | "windows";
-export type Arch = "x64" | "aarch64";
+export type Arch = "x64" | "aarch64" | "loongarch64";
 export type Abi = "gnu" | "musl";
 export type BuildType = "Debug" | "Release" | "RelWithDebInfo" | "MinSizeRel";
 export type BuildMode = "full" | "cpp-only" | "zig-only" | "link-only";
@@ -38,6 +38,8 @@ export interface Host {
   os: OS;
   arch: Arch;
 }
+
+export type TargetArch = "x64" | "aarch64" | "loongarch64";
 
 /**
  * Pinned version defaults. Each lives at the top of its own file
@@ -71,6 +73,7 @@ export interface Config {
   unix: boolean;
   x64: boolean;
   arm64: boolean;
+  loong64: boolean;
 
   /**
    * What's running the build. Differs from os/arch/windows (target) in
@@ -119,6 +122,14 @@ export interface Config {
 
   // ─── Dependency modes ───
   webkit: WebKitMode;
+
+  // ─── Cross-compilation ───
+  /** True if cross-compiling (host arch != target arch) */
+  crossCompile: boolean;
+  /** Sysroot path for cross-compilation */
+  sysroot: string | undefined;
+  /** Target triple for cross-compilation (e.g., loongarch64-linux-gnu) */
+  targetTriple: string | undefined;
 
   // ─── Paths (all absolute) ───
   /** Repository root. */
@@ -212,6 +223,9 @@ export interface PartialConfig {
   webkit?: WebKitMode;
   buildDir?: string;
   cacheDir?: string;
+  // Cross-compilation
+  sysroot?: string;
+  targetTriple?: string;
   // Version pins (defaults in versions.ts).
   nodejsVersion?: string;
   nodejsAbiVersion?: string;
@@ -281,15 +295,19 @@ export function detectHost(): Host {
               });
             })();
 
-  const a = hostArch();
+  const a = hostArch() as string;
   const arch: Arch =
     a === "x64"
       ? "x64"
       : a === "arm64"
         ? "aarch64"
-        : (() => {
-            throw new BuildError(`Unsupported host architecture: ${a}`, { hint: "Bun builds on x64 or arm64" });
-          })();
+        : a.includes("loong")
+          ? "loongarch64"
+          : (() => {
+              throw new BuildError(`Unsupported host architecture: ${a}`, {
+                hint: "Bun builds on x64, arm64, or loongarch64",
+              });
+            })();
 
   return { os, arch };
 }
@@ -326,6 +344,7 @@ export function resolveConfig(partial: PartialConfig, toolchain: Toolchain): Con
   const unix = linux || darwin;
   const x64 = arch === "x64";
   const arm64 = arch === "aarch64";
+  const loong64 = arch === "loongarch64";
 
   // Platform file conventions — MSVC style on Windows, Unix everywhere else.
   const exeSuffix = windows ? ".exe" : "";
@@ -442,6 +461,12 @@ export function resolveConfig(partial: PartialConfig, toolchain: Toolchain): Con
     ({ osxDeploymentTarget, osxSysroot } = detectMacosSdk(ci));
   }
 
+  // ─── Cross-compilation ───
+  const crossCompile = arch !== host.arch;
+  const sysroot = partial.sysroot ?? process.env.BUN_SYSROOT;
+  const targetTriple =
+    partial.targetTriple ?? process.env.BUN_TARGET_TRIPLE ?? (loong64 ? "loongarch64-linux-gnu" : undefined);
+
   return {
     os,
     arch,
@@ -452,6 +477,7 @@ export function resolveConfig(partial: PartialConfig, toolchain: Toolchain): Con
     unix,
     x64,
     arm64,
+    loong64,
     host,
     exeSuffix,
     objSuffix,
@@ -477,6 +503,9 @@ export function resolveConfig(partial: PartialConfig, toolchain: Toolchain): Con
     ci,
     buildkite,
     webkit: partial.webkit ?? "prebuilt",
+    crossCompile,
+    sysroot,
+    targetTriple,
     cwd,
     buildDir,
     codegenDir,
